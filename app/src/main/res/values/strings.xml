@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">continental</string>
+    <string name="settings">Settings</string>
+    <string name="change_location">Change location</string>
+    <string name="add_item">Add Items</string>
+    <string name="back_button">Back Button</string>
+    <string name="empty_list">Empty shopping list start adding\n by tapping on +</string>
+    <string name="home_product_card_helper_text">Same item also available in these stores</string>
+    <string name="no_location_atleast2_helper_text">Add least 2 locations to start surfing</string>
+    <string name="no_location_one_more_helper_text">Add 1 more locations to start surfing</string>
+</resources>
