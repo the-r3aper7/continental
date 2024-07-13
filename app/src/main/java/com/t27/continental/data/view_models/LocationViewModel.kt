@@ -1,5 +1,6 @@
 package com.t27.continental.data.view_models
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.t27.continental.data.models.Location
@@ -21,7 +22,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed interface SearchLocationsState {
-    data class Success(val data: Locations) : SearchLocationsState
+    data class Success(val locations: List<Location>) : SearchLocationsState
     data object Error : SearchLocationsState
     data object Loading : SearchLocationsState
     data object Initial : SearchLocationsState
@@ -66,7 +67,7 @@ class LocationViewModel(private val locationRepository: LocationRepository) : Vi
             _searchLocationState.value = SearchLocationsState.Loading
             _searchLocationState.value = try {
                 val locationResult = MashinaApi.retrofitService.searchChangeLocation(source, q)
-                SearchLocationsState.Success(locationResult)
+                SearchLocationsState.Success(locationResult.locations ?: listOf())
             } catch (e: Exception) {
                 SearchLocationsState.Error
             }

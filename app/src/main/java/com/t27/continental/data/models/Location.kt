@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Locations(
-    val locations: List<Location>
+    val locations: List<Location>?
 )
 
 @Serializable

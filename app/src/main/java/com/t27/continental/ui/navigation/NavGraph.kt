@@ -27,7 +27,6 @@ fun NavGraph(
         startDestination = Routes.Home.route,
         navController = navController
     ) {
-        Log.d("Paddingvalues", "NavGraph: $innerPadding")
         composable(route = Routes.Home.route) {
             Home(
                 navController = navController,

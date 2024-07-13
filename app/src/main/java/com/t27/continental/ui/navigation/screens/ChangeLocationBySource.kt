@@ -77,7 +77,7 @@ fun SearchLocation(
             is SearchLocationsState.Success -> LocationSuggestions(
                 source = source,
                 viewModel = locationModel,
-                locations = (searchLocationState as SearchLocationsState.Success).data.locations,
+                locations = (searchLocationState as SearchLocationsState.Success).locations,
                 navigateUp = { navController.navigateUp() }
             )
 
