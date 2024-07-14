@@ -5,15 +5,13 @@
 Continental is a mobile application designed to simplify grocery shopping by allowing users to compare product prices and availability across multiple stores. This app helps users find the best deals and conveniently manage their shopping lists.
 
 ## Screenshots
-<div style="display: flex; flex-direction:column; gap: 8px">
-  <div style="display: flex; gap: 8px">
-    <image src="https://github.com/user-attachments/assets/5004b637-cef4-4b57-93ab-1b917f155a3f" width="33%" />
-    <image src="https://github.com/user-attachments/assets/345424ba-9382-45ac-a2a2-56fdbb96b970" width="33%" />
-    <image src="https://github.com/user-attachments/assets/59cb780d-744e-4034-8b4a-b0b710bd5636" width="33%" />
-  </div>
-  <div style="display: flex; gap: 8px">
-    <image src="https://github.com/user-attachments/assets/bd092a52-3cbf-4716-9d71-069dd0388d84" width="33%" />
-    <image src="https://github.com/user-attachments/assets/3431b043-c279-45d4-bc43-fce0d11ae8bd" width="33%" />
+<div align="center">
+  <div>
+    <image src="https://github.com/user-attachments/assets/5004b637-cef4-4b57-93ab-1b917f155a3f" width="30%" />
+    <image src="https://github.com/user-attachments/assets/345424ba-9382-45ac-a2a2-56fdbb96b970" width="30%" />
+    <image src="https://github.com/user-attachments/assets/59cb780d-744e-4034-8b4a-b0b710bd5636" width="30%" />
+    <image src="https://github.com/user-attachments/assets/bd092a52-3cbf-4716-9d71-069dd0388d84" width="30%" />
+    <image src="https://github.com/user-attachments/assets/3431b043-c279-45d4-bc43-fce0d11ae8bd" width="30%" />
   </div>
 </div>
 
@@ -28,15 +26,11 @@ Download latest APK: [Link will be updated automatically]
 - Easily compare prices for the same item across various retailers
 
 ### 2. Location-Based Store Selection
-<div style="display:flex;">
-</div>
 
 - Choose your shopping location
 - View stores available in your area
 
 ### 3. Smart Search
-<div style="display:flex;">
-</div>
       
 - Search for products across all supported stores
 - Default search source can be set to a preferred store (e.g., Blinkit)
