@@ -4,6 +4,9 @@
 
 Continental is a mobile application designed to simplify grocery shopping by allowing users to compare product prices and availability across multiple stores. This app helps users find the best deals and conveniently manage their shopping lists.
 
+## Download Apk
+Download latest APK: [Link will be updated automatically]
+
 ## Features
 
 ### 1. Multi-Store Product Comparison
