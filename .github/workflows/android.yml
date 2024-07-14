@@ -27,7 +27,7 @@ jobs:
         id: sign_app
         uses: ilharp/sign-android-release@nightly
         with:
-          releaseDir: app/build/outputs/apk/release
+          releaseDir: app/release
           signingKey: ${{ secrets.SIGNING_KEY }}
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -37,6 +37,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: signed-apks
-          path: app/build/outputs/apk/release/*-release-signed.apk
+          path: app/release/*-release.apk
           if-no-files-found: error
           retention-days: 20
