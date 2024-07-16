@@ -28,6 +28,8 @@ import com.t27.continental.data.view_models.AppViewModelProvider
 import com.t27.continental.data.view_models.LocationViewModel
 import com.t27.continental.data.view_models.SearchLocationsState
 import com.t27.continental.ui.components.SearchField
+import com.t27.continental.ui.components.StateInitial
+import com.t27.continental.ui.components.StateLoading
 import kotlinx.coroutines.launch
 
 @Composable

@@ -6,21 +6,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -46,8 +40,12 @@ import com.t27.continental.data.view_models.LocationViewModel
 import com.t27.continental.data.view_models.SearchProductsState
 import com.t27.continental.data.view_models.SearchProductsViewModel
 import com.t27.continental.data.view_models.ShoppingListViewModel
+import com.t27.continental.ui.components.AddItemFilters
+import com.t27.continental.ui.components.PriceFilters
 import com.t27.continental.ui.components.SearchField
 import com.t27.continental.ui.components.SearchProductCard
+import com.t27.continental.ui.components.StateInitial
+import com.t27.continental.ui.components.StateLoading
 
 @Composable
 fun AddItem(
@@ -85,6 +83,7 @@ fun AddItem(
                 location?.let { location ->
                     viewModel.updateSearchQuery(
                         it,
+                        source,
                         location
                     )
                 }
@@ -103,9 +102,10 @@ fun AddItem(
                 ProductSuggestions(
                     location,
                     source,
-                    (searchProductState as SearchProductsState.Success).data?.productData
+                    (searchProductState as SearchProductsState.Success).data.productData
                         ?: listOf(),
-                    shoppingListModel,
+                    shoppingListModel = shoppingListModel,
+                    navigateBack = { navController.navigateUp() }
                 )
 
             is SearchProductsState.Error -> Text(text = "Error")
@@ -113,95 +113,95 @@ fun AddItem(
     }
 }
 
-@Composable
-fun Filters(
-    modifier: Modifier = Modifier,
-    onClickLowToHigh: () -> Unit,
-    onClickHighToLow: () -> Unit,
-    onClickCross: () -> Unit
-) {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        item {
-            var showClearIcon by remember {
-                mutableStateOf(false)
-            }
-            var priceFilters by remember {
-                mutableStateOf(PriceFilters.LowToHigh)
-            }
-            FilterChip(
-                selected = showClearIcon,
-                onClick = {
-                    when (priceFilters) {
-                        PriceFilters.LowToHigh -> {
-                            onClickLowToHigh()
-                            priceFilters = PriceFilters.HighToLow
-                            showClearIcon = true
-                        }
-
-                        PriceFilters.HighToLow -> {
-                            onClickHighToLow()
-                            priceFilters = PriceFilters.LowToHigh
-                            showClearIcon = true
-                        }
-                    }
-                },
-                trailingIcon = {
-                    if (showClearIcon) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = "close icon",
-                            modifier = Modifier
-                                .clickable {
-                                    onClickCross()
-                                    showClearIcon = false
-                                }
-                                .width(24.dp)
-                        )
-                    }
-                },
-                label = {
-                    if (!showClearIcon) {
-                        Text(text = PriceFilters.LowToHigh.title)
-                    } else {
-                        when (priceFilters) {
-                            PriceFilters.LowToHigh -> Text(text = PriceFilters.HighToLow.title)
-                            PriceFilters.HighToLow -> Text(text = PriceFilters.LowToHigh.title)
-                        }
-                    }
-                }
-            )
-        }
-    }
-}
-
-enum class PriceFilters(val title: String) {
-    LowToHigh("Low to High"),
-    HighToLow("High to Low")
-}
 
 @Composable
 fun ProductSuggestions(
     location: Location?,
     source: SearchSource,
     products: List<Product>,
+    navigateBack: () -> Unit,
     shoppingListModel: ShoppingListViewModel,
 ) {
     var productsState by remember {
         mutableStateOf(products)
     }
-    Filters(
+
+    var weightState by remember {
+        mutableStateOf(products.distinctBy { it.weight })
+    }
+
+    var brandState by remember {
+        mutableStateOf(products.distinctBy { it.brand })
+    }
+
+    data class FilterState(
+        var brandFilter: String = "",
+        var priceSort: PriceFilters? = null,
+        var weightFilter: String = "",
+    )
+
+    var filterState by remember { mutableStateOf(FilterState()) }
+
+    fun applyFilters(currentProducts: List<Product>): List<Product> {
+        var filteredProducts = currentProducts
+
+        // Apply brand filter
+        if (filterState.brandFilter.isNotEmpty()) {
+            filteredProducts = filteredProducts.filter { it.brand == filterState.brandFilter }
+            // Update weight options based on selected brand
+            weightState = filteredProducts.distinctBy { it.weight }
+        }
+
+        // Apply weight filter
+        if (filterState.weightFilter.isNotEmpty()) {
+            filteredProducts = filteredProducts.filter { it.weight == filterState.weightFilter }
+            // Update brand options based on selected weight
+            brandState = filteredProducts.distinctBy { it.brand }
+        }
+
+        // If no filters are applied, reset both states
+        if (filterState.brandFilter.isEmpty() && filterState.weightFilter.isEmpty()) {
+            weightState = products.distinctBy { it.weight }
+            brandState = products.distinctBy { it.brand }
+        }
+
+        // Apply price sorting
+        when (filterState.priceSort) {
+            PriceFilters.LowToHigh -> filteredProducts = filteredProducts.sortedBy { it.mrpPrice }
+            PriceFilters.HighToLow -> filteredProducts =
+                filteredProducts.sortedByDescending { it.mrpPrice }
+
+            null -> {}
+        }
+
+        return filteredProducts
+    }
+
+    AddItemFilters(
         onClickLowToHigh = {
-            productsState = productsState.sortedBy { it.mrpPrice }
+            filterState = filterState.copy(priceSort = PriceFilters.LowToHigh)
+            productsState = applyFilters(products)
         },
         onClickHighToLow = {
-            productsState = productsState.sortedByDescending { it.mrpPrice }
+            filterState = filterState.copy(priceSort = PriceFilters.HighToLow)
+            productsState = applyFilters(products)
         },
         onClickCross = {
-            productsState = products
+            filterState = filterState.copy(priceSort = null)
+            productsState = applyFilters(products)
+        },
+        weights = weightState,
+        onClickWeight = { weight ->
+            filterState = filterState.copy(weightFilter = weight)
+            productsState = applyFilters(products)
+        },
+        brands = brandState,
+        onClickBrand = { brand ->
+            filterState = filterState.copy(brandFilter = brand)
+            productsState = applyFilters(products)
         }
     )
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(160.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -218,37 +218,11 @@ fun ProductSuggestions(
                 onAddToList = {
                     shoppingListModel.fetchSimilarItems(source, it, location ?: Location())
                     isAdded = true
+                    navigateBack()
                 }
             )
 
         }
-    }
-}
-
-@Composable
-fun StateInitial(text: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = text,
-            maxLines = 2,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
-
-@Composable
-fun StateLoading(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator()
     }
 }
 
@@ -307,8 +281,7 @@ fun ProductSourceIcon(
                 },
                 text = { Text(it.title) },
                 onClick = {
-                    searchProductsViewModel.setSource(it)
-                    searchProductsViewModel.updateSearchQuery(value, location)
+                    searchProductsViewModel.updateSearchQuery(value, it, location)
                     onExpandedChange(false)
                 }
             )
