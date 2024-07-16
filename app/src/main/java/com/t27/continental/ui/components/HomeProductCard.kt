@@ -93,22 +93,22 @@ fun HomeProductCard(
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-
                     Text(
                         text = product.name, maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 18.sp,
                     )
-
                     Text(
                         text = "${product.currency}${product.mrpPrice}",
                         maxLines = 1,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Text(text = product.weight)
-
-
+                    Text(
+                        text = product.weight,
+                        maxLines = 1,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
             Text(

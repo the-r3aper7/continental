@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -113,17 +114,71 @@ fun AddItem(
 }
 
 @Composable
-fun Filters(modifier: Modifier = Modifier) {
+fun Filters(
+    modifier: Modifier = Modifier,
+    onClickLowToHigh: () -> Unit,
+    onClickHighToLow: () -> Unit,
+    onClickCross: () -> Unit
+) {
     LazyRow(
         modifier = Modifier.fillMaxWidth()
     ) {
         item {
+            var showClearIcon by remember {
+                mutableStateOf(false)
+            }
+            var priceFilters by remember {
+                mutableStateOf(PriceFilters.LowToHigh)
+            }
             FilterChip(
-                selected = true,
-                onClick = { /*TODO*/ },
-                label = { Text(text = "Low to High") })
+                selected = showClearIcon,
+                onClick = {
+                    when (priceFilters) {
+                        PriceFilters.LowToHigh -> {
+                            onClickLowToHigh()
+                            priceFilters = PriceFilters.HighToLow
+                            showClearIcon = true
+                        }
+
+                        PriceFilters.HighToLow -> {
+                            onClickHighToLow()
+                            priceFilters = PriceFilters.LowToHigh
+                            showClearIcon = true
+                        }
+                    }
+                },
+                trailingIcon = {
+                    if (showClearIcon) {
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = "close icon",
+                            modifier = Modifier
+                                .clickable {
+                                    onClickCross()
+                                    showClearIcon = false
+                                }
+                                .width(24.dp)
+                        )
+                    }
+                },
+                label = {
+                    if (!showClearIcon) {
+                        Text(text = PriceFilters.LowToHigh.title)
+                    } else {
+                        when (priceFilters) {
+                            PriceFilters.LowToHigh -> Text(text = PriceFilters.HighToLow.title)
+                            PriceFilters.HighToLow -> Text(text = PriceFilters.LowToHigh.title)
+                        }
+                    }
+                }
+            )
         }
     }
+}
+
+enum class PriceFilters(val title: String) {
+    LowToHigh("Low to High"),
+    HighToLow("High to Low")
 }
 
 @Composable
@@ -133,22 +188,33 @@ fun ProductSuggestions(
     products: List<Product>,
     shoppingListModel: ShoppingListViewModel,
 ) {
-    Filters()
+    var productsState by remember {
+        mutableStateOf(products)
+    }
+    Filters(
+        onClickLowToHigh = {
+            productsState = productsState.sortedBy { it.mrpPrice }
+        },
+        onClickHighToLow = {
+            productsState = productsState.sortedByDescending { it.mrpPrice }
+        },
+        onClickCross = {
+            productsState = products
+        }
+    )
     LazyVerticalGrid(
         columns = GridCells.Adaptive(160.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(products) {
+        items(productsState) {
             var isAdded by remember {
                 mutableStateOf(false)
             }
             val product = shoppingListModel.getProduct(it).collectAsState(initial = Product)
-
             SearchProductCard(
                 product = it,
                 isAdded = product.value != null,
-                showSource = false,
                 onAddToList = {
                     shoppingListModel.fetchSimilarItems(source, it, location ?: Location())
                     isAdded = true

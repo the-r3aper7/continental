@@ -44,7 +44,6 @@ import com.t27.continental.data.models.Product
 @Composable
 fun SearchProductCard(
     modifier: Modifier = Modifier,
-    showSource: Boolean,
     product: Product,
     isAdded: Boolean,
     onAddToList: () -> Unit,
@@ -123,21 +122,19 @@ fun SearchProductCard(
                     )
                 }
             }
-            if (!showSource) {
-                Button(
-                    onClick = {
-                        if (!isAdded) {
-                            onAddToList()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        disabledContentColor = MaterialTheme.colorScheme.onSecondary
-                    ),
-                    enabled = !isAdded
-                ) {
-                    Text(text = if (isAdded) "Added" else "Add to list")
-                }
+            Button(
+                onClick = {
+                    if (!isAdded) {
+                        onAddToList()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    disabledContentColor = MaterialTheme.colorScheme.onSecondary
+                ),
+                enabled = !isAdded
+            ) {
+                Text(text = if (isAdded) "Added" else "Add to list")
             }
         }
     }
@@ -153,7 +150,7 @@ fun SavingsChips(modifier: Modifier = Modifier, product: Product) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSecondary,
+                color = Color.White,
             )
         },
         enabled = true,
