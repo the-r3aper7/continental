@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -17,6 +19,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -110,12 +113,27 @@ fun AddItem(
 }
 
 @Composable
+fun Filters(modifier: Modifier = Modifier) {
+    LazyRow(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        item {
+            FilterChip(
+                selected = true,
+                onClick = { /*TODO*/ },
+                label = { Text(text = "Low to High") })
+        }
+    }
+}
+
+@Composable
 fun ProductSuggestions(
     location: Location?,
     source: SearchSource,
     products: List<Product>,
     shoppingListModel: ShoppingListViewModel,
 ) {
+    Filters()
     LazyVerticalGrid(
         columns = GridCells.Adaptive(160.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

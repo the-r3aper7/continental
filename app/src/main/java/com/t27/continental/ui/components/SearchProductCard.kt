@@ -14,9 +14,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,25 +78,7 @@ fun SearchProductCard(
                     contentScale = ContentScale.Crop
                 )
                 if (!product.totalSavings.equals(0f)) {
-                    AssistChip(
-                        onClick = { },
-                        label = {
-                            Text(
-                                text = "Saves ${product.currency}${product.totalSavings}",
-                                maxLines = 1,
-                                color = Color.White,
-                                overflow = TextOverflow.Ellipsis,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        },
-                        enabled = true,
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .align(Alignment.BottomEnd),
-                        colors = AssistChipDefaults.assistChipColors(
-                            Color.Black.copy(alpha = 0.45f)
-                        )
-                    )
+                    SavingsChips(modifier.align(Alignment.BottomCenter), product)
                 }
             }
             Text(
@@ -147,6 +131,9 @@ fun SearchProductCard(
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        disabledContentColor = MaterialTheme.colorScheme.onSecondary
+                    ),
                     enabled = !isAdded
                 ) {
                     Text(text = if (isAdded) "Added" else "Add to list")
@@ -154,4 +141,25 @@ fun SearchProductCard(
             }
         }
     }
+}
+
+@Composable
+fun SavingsChips(modifier: Modifier = Modifier, product: Product) {
+    AssistChip(
+        onClick = { },
+        label = {
+            Text(
+                text = "Saves ${product.currency}${product.totalSavings}",
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSecondary,
+            )
+        },
+        enabled = true,
+        colors = AssistChipDefaults.assistChipColors(
+            Color.Black.copy(alpha = 0.65f)
+        ),
+        modifier = modifier
+    )
 }

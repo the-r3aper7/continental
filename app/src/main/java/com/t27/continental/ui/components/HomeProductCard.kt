@@ -17,8 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -88,25 +86,7 @@ fun HomeProductCard(
                         contentScale = ContentScale.Crop
                     )
                     if (!product.totalSavings.equals(0f)) {
-                        AssistChip(
-                            onClick = { },
-                            label = {
-                                Text(
-                                    text = "Saves ${product.currency}${product.totalSavings}",
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSecondary,
-                                )
-                            },
-                            enabled = true,
-                            colors = AssistChipDefaults.assistChipColors(
-                                Color.Black.copy(alpha = 0.65f)
-                            ),
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-
-                        )
+                        SavingsChips(Modifier.align(Alignment.BottomCenter), product)
                     }
                     MoreOptions(Modifier.align(Alignment.TopEnd), onRemove)
                 }
