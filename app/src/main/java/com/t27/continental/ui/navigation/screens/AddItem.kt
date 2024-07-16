@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -105,7 +106,8 @@ fun AddItem(
                     source,
                     (searchProductState as SearchProductsState.Success).data?.productData
                         ?: listOf(),
-                    shoppingListModel,
+                    shoppingListModel = shoppingListModel,
+                    navigateBack = { navController.navigateUp() }
                 )
 
             is SearchProductsState.Error -> Text(text = "Error")
@@ -114,61 +116,148 @@ fun AddItem(
 }
 
 @Composable
-fun Filters(
+fun AddItemFilters(
     modifier: Modifier = Modifier,
     onClickLowToHigh: () -> Unit,
     onClickHighToLow: () -> Unit,
-    onClickCross: () -> Unit
+    onClickCross: () -> Unit,
+    onClickWeight: (weight: String) -> Unit,
+    weights: List<Product>,
+    brands: List<Product>,
+    onClickBrand: (brand: String) -> Unit
 ) {
     LazyRow(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
-            var showClearIcon by remember {
+            var expanded by remember {
                 mutableStateOf(false)
             }
-            var priceFilters by remember {
-                mutableStateOf(PriceFilters.LowToHigh)
+            var currBrand by remember {
+                mutableStateOf("")
             }
             FilterChip(
-                selected = showClearIcon,
-                onClick = {
-                    when (priceFilters) {
-                        PriceFilters.LowToHigh -> {
-                            onClickLowToHigh()
-                            priceFilters = PriceFilters.HighToLow
-                            showClearIcon = true
-                        }
-
-                        PriceFilters.HighToLow -> {
-                            onClickHighToLow()
-                            priceFilters = PriceFilters.LowToHigh
-                            showClearIcon = true
+                selected = currBrand.isNotEmpty(),
+                onClick = { expanded = true },
+                label = {
+                    if (currBrand.isEmpty()) {
+                        Text(text = "Brand")
+                    } else {
+                        Text(text = currBrand)
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.heightIn(max = 186.dp)
+                    ) {
+                        brands.forEach {
+                            DropdownMenuItem(
+                                text = { Text(text = it.brand) },
+                                onClick = {
+                                    currBrand = it.brand
+                                    onClickBrand(currBrand)
+                                    expanded = false
+                                }
+                            )
                         }
                     }
                 },
                 trailingIcon = {
-                    if (showClearIcon) {
+                    if (currBrand.isNotEmpty()) {
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = "close",
+                            modifier = Modifier
+                                .clickable {
+                                    currBrand = ""
+                                    onClickBrand(currBrand)
+                                }
+                        )
+                    }
+                }
+            )
+        }
+        item {
+            var priceFilters by remember { mutableStateOf<PriceFilters?>(null) }
+            FilterChip(
+                selected = priceFilters != null,
+                onClick = {
+                    when (priceFilters) {
+                        null, PriceFilters.HighToLow -> {
+                            onClickLowToHigh()
+                            priceFilters = PriceFilters.LowToHigh
+                        }
+
+                        PriceFilters.LowToHigh -> {
+                            onClickHighToLow()
+                            priceFilters = PriceFilters.HighToLow
+                        }
+                    }
+                },
+                trailingIcon = {
+                    if (priceFilters != null) {
                         Icon(
                             Icons.Filled.Close,
                             contentDescription = "close icon",
                             modifier = Modifier
                                 .clickable {
                                     onClickCross()
-                                    showClearIcon = false
+                                    priceFilters = null
                                 }
                                 .width(24.dp)
                         )
                     }
                 },
                 label = {
-                    if (!showClearIcon) {
-                        Text(text = PriceFilters.LowToHigh.title)
+                    Text(text = priceFilters?.title ?: "Low to High")
+                }
+            )
+        }
+        item {
+            var expanded by remember {
+                mutableStateOf(false)
+            }
+            var currWeight by remember {
+                mutableStateOf("")
+            }
+            FilterChip(
+                selected = currWeight.isNotEmpty(),
+                onClick = { expanded = true },
+                label = {
+                    if (currWeight.isEmpty()) {
+                        Text(text = "Quantity")
                     } else {
-                        when (priceFilters) {
-                            PriceFilters.LowToHigh -> Text(text = PriceFilters.HighToLow.title)
-                            PriceFilters.HighToLow -> Text(text = PriceFilters.LowToHigh.title)
+                        Text(text = currWeight)
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.heightIn(max = 186.dp)
+                    ) {
+                        weights.forEach {
+                            DropdownMenuItem(
+                                text = { Text(text = it.weight) },
+                                onClick = {
+                                    currWeight = it.weight
+                                    onClickWeight(currWeight)
+                                    expanded = false
+                                }
+                            )
                         }
+                    }
+                },
+                trailingIcon = {
+                    if (currWeight.isNotEmpty()) {
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = "close",
+                            modifier = Modifier
+                                .clickable {
+                                    currWeight = ""
+                                    onClickWeight(currWeight)
+                                }
+                        )
                     }
                 }
             )
@@ -186,22 +275,89 @@ fun ProductSuggestions(
     location: Location?,
     source: SearchSource,
     products: List<Product>,
+    navigateBack: () -> Unit,
     shoppingListModel: ShoppingListViewModel,
 ) {
     var productsState by remember {
         mutableStateOf(products)
     }
-    Filters(
+
+    var weightState by remember {
+        mutableStateOf(products.distinctBy { it.weight })
+    }
+
+    var brandState by remember {
+        mutableStateOf(products.distinctBy { it.brand })
+    }
+
+    data class FilterState(
+        var brandFilter: String = "",
+        var priceSort: PriceFilters? = null,
+        var weightFilter: String = "",
+    )
+
+    var filterState by remember { mutableStateOf(FilterState()) }
+
+    fun applyFilters(currentProducts: List<Product>): List<Product> {
+        var filteredProducts = currentProducts
+
+        // Apply brand filter
+        if (filterState.brandFilter.isNotEmpty()) {
+            filteredProducts = filteredProducts.filter { it.brand == filterState.brandFilter }
+            // Update weight options based on selected brand
+            weightState = filteredProducts.distinctBy { it.weight }
+        }
+
+        // Apply weight filter
+        if (filterState.weightFilter.isNotEmpty()) {
+            filteredProducts = filteredProducts.filter { it.weight == filterState.weightFilter }
+            // Update brand options based on selected weight
+            brandState = filteredProducts.distinctBy { it.brand }
+        }
+
+        // If no filters are applied, reset both states
+        if (filterState.brandFilter.isEmpty() && filterState.weightFilter.isEmpty()) {
+            weightState = products.distinctBy { it.weight }
+            brandState = products.distinctBy { it.brand }
+        }
+
+        // Apply price sorting
+        when (filterState.priceSort) {
+            PriceFilters.LowToHigh -> filteredProducts = filteredProducts.sortedBy { it.mrpPrice }
+            PriceFilters.HighToLow -> filteredProducts =
+                filteredProducts.sortedByDescending { it.mrpPrice }
+
+            null -> {}
+        }
+
+        return filteredProducts
+    }
+
+    AddItemFilters(
         onClickLowToHigh = {
-            productsState = productsState.sortedBy { it.mrpPrice }
+            filterState = filterState.copy(priceSort = PriceFilters.LowToHigh)
+            productsState = applyFilters(products)
         },
         onClickHighToLow = {
-            productsState = productsState.sortedByDescending { it.mrpPrice }
+            filterState = filterState.copy(priceSort = PriceFilters.HighToLow)
+            productsState = applyFilters(products)
         },
         onClickCross = {
-            productsState = products
+            filterState = filterState.copy(priceSort = null)
+            productsState = applyFilters(products)
+        },
+        weights = weightState,
+        onClickWeight = { weight ->
+            filterState = filterState.copy(weightFilter = weight)
+            productsState = applyFilters(products)
+        },
+        brands = brandState,
+        onClickBrand = { brand ->
+            filterState = filterState.copy(brandFilter = brand)
+            productsState = applyFilters(products)
         }
     )
+
     LazyVerticalGrid(
         columns = GridCells.Adaptive(160.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -218,6 +374,7 @@ fun ProductSuggestions(
                 onAddToList = {
                     shoppingListModel.fetchSimilarItems(source, it, location ?: Location())
                     isAdded = true
+                    navigateBack()
                 }
             )
 
