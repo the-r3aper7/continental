@@ -6,22 +6,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -47,8 +40,12 @@ import com.t27.continental.data.view_models.LocationViewModel
 import com.t27.continental.data.view_models.SearchProductsState
 import com.t27.continental.data.view_models.SearchProductsViewModel
 import com.t27.continental.data.view_models.ShoppingListViewModel
+import com.t27.continental.ui.components.AddItemFilters
+import com.t27.continental.ui.components.PriceFilters
 import com.t27.continental.ui.components.SearchField
 import com.t27.continental.ui.components.SearchProductCard
+import com.t27.continental.ui.components.StateInitial
+import com.t27.continental.ui.components.StateLoading
 
 @Composable
 fun AddItem(
@@ -86,6 +83,7 @@ fun AddItem(
                 location?.let { location ->
                     viewModel.updateSearchQuery(
                         it,
+                        source,
                         location
                     )
                 }
@@ -104,7 +102,7 @@ fun AddItem(
                 ProductSuggestions(
                     location,
                     source,
-                    (searchProductState as SearchProductsState.Success).data?.productData
+                    (searchProductState as SearchProductsState.Success).data.productData
                         ?: listOf(),
                     shoppingListModel = shoppingListModel,
                     navigateBack = { navController.navigateUp() }
@@ -115,160 +113,6 @@ fun AddItem(
     }
 }
 
-@Composable
-fun AddItemFilters(
-    modifier: Modifier = Modifier,
-    onClickLowToHigh: () -> Unit,
-    onClickHighToLow: () -> Unit,
-    onClickCross: () -> Unit,
-    onClickWeight: (weight: String) -> Unit,
-    weights: List<Product>,
-    brands: List<Product>,
-    onClickBrand: (brand: String) -> Unit
-) {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        item {
-            var expanded by remember {
-                mutableStateOf(false)
-            }
-            var currBrand by remember {
-                mutableStateOf("")
-            }
-            FilterChip(
-                selected = currBrand.isNotEmpty(),
-                onClick = { expanded = true },
-                label = {
-                    if (currBrand.isEmpty()) {
-                        Text(text = "Brand")
-                    } else {
-                        Text(text = currBrand)
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.heightIn(max = 186.dp)
-                    ) {
-                        brands.forEach {
-                            DropdownMenuItem(
-                                text = { Text(text = it.brand) },
-                                onClick = {
-                                    currBrand = it.brand
-                                    onClickBrand(currBrand)
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                },
-                trailingIcon = {
-                    if (currBrand.isNotEmpty()) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = "close",
-                            modifier = Modifier
-                                .clickable {
-                                    currBrand = ""
-                                    onClickBrand(currBrand)
-                                }
-                        )
-                    }
-                }
-            )
-        }
-        item {
-            var priceFilters by remember { mutableStateOf<PriceFilters?>(null) }
-            FilterChip(
-                selected = priceFilters != null,
-                onClick = {
-                    when (priceFilters) {
-                        null, PriceFilters.HighToLow -> {
-                            onClickLowToHigh()
-                            priceFilters = PriceFilters.LowToHigh
-                        }
-
-                        PriceFilters.LowToHigh -> {
-                            onClickHighToLow()
-                            priceFilters = PriceFilters.HighToLow
-                        }
-                    }
-                },
-                trailingIcon = {
-                    if (priceFilters != null) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = "close icon",
-                            modifier = Modifier
-                                .clickable {
-                                    onClickCross()
-                                    priceFilters = null
-                                }
-                                .width(24.dp)
-                        )
-                    }
-                },
-                label = {
-                    Text(text = priceFilters?.title ?: "Low to High")
-                }
-            )
-        }
-        item {
-            var expanded by remember {
-                mutableStateOf(false)
-            }
-            var currWeight by remember {
-                mutableStateOf("")
-            }
-            FilterChip(
-                selected = currWeight.isNotEmpty(),
-                onClick = { expanded = true },
-                label = {
-                    if (currWeight.isEmpty()) {
-                        Text(text = "Quantity")
-                    } else {
-                        Text(text = currWeight)
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.heightIn(max = 186.dp)
-                    ) {
-                        weights.forEach {
-                            DropdownMenuItem(
-                                text = { Text(text = it.weight) },
-                                onClick = {
-                                    currWeight = it.weight
-                                    onClickWeight(currWeight)
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
-                },
-                trailingIcon = {
-                    if (currWeight.isNotEmpty()) {
-                        Icon(
-                            Icons.Filled.Close,
-                            contentDescription = "close",
-                            modifier = Modifier
-                                .clickable {
-                                    currWeight = ""
-                                    onClickWeight(currWeight)
-                                }
-                        )
-                    }
-                }
-            )
-        }
-    }
-}
-
-enum class PriceFilters(val title: String) {
-    LowToHigh("Low to High"),
-    HighToLow("High to Low")
-}
 
 @Composable
 fun ProductSuggestions(
@@ -383,33 +227,6 @@ fun ProductSuggestions(
 }
 
 @Composable
-fun StateInitial(text: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = text,
-            maxLines = 2,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
-
-@Composable
-fun StateLoading(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CircularProgressIndicator()
-    }
-}
-
-@Composable
 fun ProductSourceIcon(
     location: Location,
     source: SearchSource,
@@ -464,8 +281,7 @@ fun ProductSourceIcon(
                 },
                 text = { Text(it.title) },
                 onClick = {
-                    searchProductsViewModel.setSource(it)
-                    searchProductsViewModel.updateSearchQuery(value, location)
+                    searchProductsViewModel.updateSearchQuery(value, it, location)
                     onExpandedChange(false)
                 }
             )

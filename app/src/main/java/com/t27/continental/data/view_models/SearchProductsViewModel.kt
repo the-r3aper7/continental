@@ -1,24 +1,22 @@
 package com.t27.continental.data.view_models
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.t27.continental.data.models.Location
 import com.t27.continental.data.models.Products
 import com.t27.continental.data.models.SearchSource
 import com.t27.continental.data.network.MashinaApi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 sealed interface SearchProductsState {
-    data class Success(val data: Products?) : SearchProductsState
+    data class Success(val data: Products) : SearchProductsState
     data object Error : SearchProductsState
     data object Loading : SearchProductsState
     data object Initial : SearchProductsState
@@ -38,38 +36,25 @@ class SearchProductsViewModel(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _location = MutableStateFlow(Location())
-    val location = _location.asStateFlow()
+    private var searchJob: Job? = null
 
-    init {
-        observeSearchQuery()
-    }
-
-    fun setSource(source: SearchSource) {
-        _source.value = source
-    }
-
-    fun updateSearchQuery(q: String, location: Location) {
+    @OptIn(FlowPreview::class)
+    fun updateSearchQuery(q: String, source: SearchSource, location: Location) {
         _searchQuery.value = q
-        _location.value = location
-    }
+        _source.value = source
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun observeSearchQuery() {
-        searchQuery
+        searchJob?.cancel()
+
+        searchJob = searchQuery
             .debounce(750)
-            .combine(source) { query, source -> Pair(query, source) }
-            .flatMapLatest { (query, source) ->
-                flow {
-                    if (query.isBlank()) {
-                        emit(SearchProductsState.Initial)
-                    } else {
-                        emit(SearchProductsState.Loading)
-                        emit(searchProducts(query, source, location.value))
-                    }
+            .onEach { query ->
+                if (query.isBlank()) {
+                    _searchProductState.value = SearchProductsState.Initial
+                    return@onEach
                 }
+                _searchProductState.value = SearchProductsState.Loading
+                _searchProductState.value = searchProducts(q, source, location)
             }
-            .onEach { state -> _searchProductState.value = state }
             .launchIn(viewModelScope)
     }
 
@@ -98,13 +83,9 @@ class SearchProductsViewModel(
                     )
 
             }
-            SearchProductsState.Success(
-                products ?: Products(
-                    productData = null,
-                    statusCode = false
-                )
-            )
+            SearchProductsState.Success(products)
         } catch (e: Exception) {
+            Log.e("TAG", "searchProducts: $e")
             SearchProductsState.Error
         }
     }
