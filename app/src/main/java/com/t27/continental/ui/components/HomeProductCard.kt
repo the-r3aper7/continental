@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -88,6 +89,27 @@ fun HomeProductCard(
                             ),
                         contentScale = ContentScale.Crop
                     )
+                    if (!product.totalSavings.equals(0f)) {
+                        AssistChip(
+                            onClick = { },
+                            label = {
+                                Text(
+                                    text = "Saves ${product.currency}${product.totalSavings}",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSecondary,
+                                )
+                            },
+                            enabled = true,
+                            colors = AssistChipDefaults.assistChipColors(
+                                Color.Black.copy(alpha = 0.45f)
+                            ),
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+
+                        )
+                    }
                     Box(
                         modifier = Modifier
                             .padding(dimensionResource(id = R.dimen.padding_medium))
@@ -125,22 +147,7 @@ fun HomeProductCard(
                     )
                     Text(text = product.weight)
 
-                    if (!product.totalSavings.equals(0f)) {
-                        AssistChip(
-                            onClick = { },
-                            label = {
-                                Text(
-                                    text = "Saves ${product.currency}${product.totalSavings} on ${product.source}",
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(10.dp)
-                                )
-                            },
-                            enabled = true,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+
                 }
             }
             Text(
@@ -156,6 +163,16 @@ fun HomeProductCard(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
+                            .clickable {
+                                product =
+                                    similarItem.first { item -> item.productId == it.productId }
+                            }
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(
+                                if (product.source == it.source) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surface.copy(
+                                    0.2F
+                                )
+                            )
                             .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
                             .padding(
                                 top = dimensionResource(id = R.dimen.padding_extra_small),
@@ -163,10 +180,6 @@ fun HomeProductCard(
                                 start = dimensionResource(id = R.dimen.padding_small),
                                 end = dimensionResource(id = R.dimen.padding_medium)
                             )
-                            .clickable {
-                                product =
-                                    similarItem.first { item -> item.productId == it.productId }
-                            }
                     ) {
                         SearchSourceIcon(
                             source = SearchSource.fromString(it.source), modifier = modifier

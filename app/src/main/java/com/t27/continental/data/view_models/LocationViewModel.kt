@@ -1,10 +1,8 @@
 package com.t27.continental.data.view_models
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.t27.continental.data.models.Location
-import com.t27.continental.data.models.Locations
 import com.t27.continental.data.models.SearchSource
 import com.t27.continental.data.network.MashinaApi
 import com.t27.continental.data.repository.LocationRepository
