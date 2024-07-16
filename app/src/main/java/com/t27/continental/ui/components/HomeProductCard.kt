@@ -119,7 +119,8 @@ fun HomeProductCard(
                             Icons.Filled.MoreVert, contentDescription = "more options",
                             modifier = Modifier.clickable {
                                 expanded = true
-                            }
+                            },
+                            tint = Color.Black
                         )
                         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                             DropdownMenuItem(
@@ -163,17 +164,21 @@ fun HomeProductCard(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
+                            .clip(MaterialTheme.shapes.medium)
+                            .border(
+                                1.dp,
+                                MaterialTheme.colorScheme.surface,
+                                MaterialTheme.shapes.medium
+                            )
                             .clickable {
                                 product =
                                     similarItem.first { item -> item.productId == it.productId }
                             }
-                            .clip(MaterialTheme.shapes.medium)
                             .background(
                                 if (product.source == it.source) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surface.copy(
-                                    0.2F
+                                    0.25F
                                 )
                             )
-                            .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
                             .padding(
                                 top = dimensionResource(id = R.dimen.padding_extra_small),
                                 bottom = dimensionResource(id = R.dimen.padding_extra_small),
