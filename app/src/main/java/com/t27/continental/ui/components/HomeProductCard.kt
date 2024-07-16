@@ -103,7 +103,7 @@ fun HomeProductCard(
                             },
                             enabled = true,
                             colors = AssistChipDefaults.assistChipColors(
-                                Color.Black.copy(alpha = 0.45f)
+                                Color.Black.copy(alpha = 0.65f)
                             ),
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
