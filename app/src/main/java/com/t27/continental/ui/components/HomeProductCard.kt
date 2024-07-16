@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -59,9 +60,6 @@ fun HomeProductCard(
     onRemove: () -> Unit
 ) {
     var product by remember { mutableStateOf(similarItem.first()) }
-    var expanded by remember {
-        mutableStateOf(false)
-    }
 
     Card(
         elevation = CardDefaults.cardElevation(2.dp),
@@ -110,25 +108,7 @@ fun HomeProductCard(
 
                         )
                     }
-                    Box(
-                        modifier = Modifier
-                            .padding(dimensionResource(id = R.dimen.padding_medium))
-                            .align(Alignment.TopEnd)
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreVert, contentDescription = "more options",
-                            modifier = Modifier.clickable {
-                                expanded = true
-                            },
-                            tint = Color.Black
-                        )
-                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                            DropdownMenuItem(
-                                text = { Text(text = "Remove item") },
-                                onClick = onRemove
-                            )
-                        }
-                    }
+                    MoreOptions(Modifier.align(Alignment.TopEnd), onRemove)
                 }
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -195,6 +175,39 @@ fun HomeProductCard(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MoreOptions(modifier: Modifier = Modifier, onRemove: () -> Unit) {
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+    Box(
+        modifier = modifier
+            .padding(dimensionResource(id = R.dimen.padding_medium))
+    ) {
+        Icon(
+            Icons.Filled.MoreVert, contentDescription = "more options",
+            modifier = Modifier.clickable {
+                expanded = true
+            },
+            tint = Color.Black
+        )
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Filled.Delete, contentDescription = "remove item icon")
+                        Text(text = "Remove item")
+                    }
+                },
+                onClick = onRemove
+            )
         }
     }
 }
