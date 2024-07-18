@@ -31,14 +31,15 @@ jobs:
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - uses: gradle/actions/setup-gradle@v3
+
       - name: Build Nightly APK
         run: gradle assembleNightly
 
       - name: Sign Nightly APK
-        id: sign_app
+        id: sign_nightly_app
         uses: ilharp/sign-android-release@nightly
         with:
-          releaseDir: app/release
+          releaseDir: app/build/outputs/apk/release
           signingKey: ${{ secrets.SIGNING_KEY }}
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -47,8 +48,8 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: signed-apks
-          path: ${{ steps.sign_app.outputs.signedFile }}
+          name: Signed app bundle
+          path: ${{ steps.sign_nightly_app.outputs.signedFile }}
           if-no-files-found: error
           retention-days: 20
 
@@ -70,6 +71,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_nightly_release.outputs.upload_url }}
-          asset_path: ${{ steps.sign_app.outputs.signedFile }}
+          asset_path: ${{ steps.sign_nightly_app.outputs.signedFile }}
           asset_name: continental@nightly.apk
           asset_content_type: application/vnd.android.package-archive
