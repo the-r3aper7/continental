@@ -1,9 +1,27 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("com.google.devtools.ksp") version "1.9.20-1.0.14"
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.10"
 }
+
+
+val versionPropsFile = file("../version.properties")
+val versionProps = Properties()
+
+if (versionPropsFile.canRead()) {
+    versionProps.load(FileInputStream(versionPropsFile))
+} else {
+    throw GradleException("Could not read version.properties!")
+}
+
+val versionMajor = versionProps["VERSION_MAJOR"].toString().toInt()
+val versionMinor = versionProps["VERSION_MINOR"].toString().toInt()
+val versionPatch = versionProps["VERSION_PATCH"].toString().toInt()
+val versionBuild = versionProps["VERSION_BUILD"].toString().toInt()
 
 android {
     namespace = "com.t27.continental"
@@ -13,8 +31,8 @@ android {
         applicationId = "com.t27.continental"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = versionMajor * 10000 + versionMinor * 1000 + versionPatch * 100 + versionBuild
+        versionName = "$versionMajor.$versionMinor.$versionPatch"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -23,7 +41,15 @@ android {
     }
 
     buildTypes {
-        release {
+        create("nightly") {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            versionNameSuffix = "@nightly"
+        }
+        getByName("release") {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -49,6 +75,62 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+tasks.register("incrementVersionCode") {
+    doLast {
+        versionProps.load(FileInputStream(versionPropsFile))
+        versionProps["VERSION_BUILD"] =
+            (versionProps["VERSION_BUILD"].toString().toInt() + 1).toString()
+        versionProps.store(versionPropsFile.writer(), null)
+//        val propertiesFile = file("../version.properties")
+//        if (propertiesFile.canRead()) {
+//            val properties = Properties()
+//            properties.load(FileInputStream(propertiesFile))
+//            val versionBuild = properties["VERSION_BUILD"].toString().toInt() + 1
+//            properties["VERSION_BUILD"] = versionBuild.toString()
+//            properties.store(propertiesFile.writer(), null)
+//        } else {
+//            throw GradleException("Could not read version.properties!")
+//        }
+    }
+}
+
+tasks.register("incrementMajor") {
+    doLast {
+        versionProps.load(FileInputStream(versionPropsFile))
+        versionProps["VERSION_MAJOR"] =
+            (versionProps["VERSION_MAJOR"].toString().toInt() + 1).toString()
+        versionProps["VERSION_MINOR"] = "0"
+        versionProps["VERSION_PATCH"] = "0"
+        versionProps["VERSION_BUILD"] = "0"
+        versionProps.store(versionPropsFile.writer(), null)
+    }
+}
+
+tasks.register("incrementMinor") {
+    doLast {
+        versionProps.load(FileInputStream(versionPropsFile))
+        versionProps["VERSION_MINOR"] =
+            (versionProps["VERSION_MINOR"].toString().toInt() + 1).toString()
+        versionProps["VERSION_PATCH"] = "0"
+        versionProps["VERSION_BUILD"] = "0"
+        versionProps.store(versionPropsFile.writer(), null)
+    }
+}
+
+tasks.register("incrementPatch") {
+    doLast {
+        versionProps.load(FileInputStream(versionPropsFile))
+        versionProps["VERSION_PATCH"] =
+            (versionProps["VERSION_PATCH"].toString().toInt() + 1).toString()
+        versionProps["VERSION_BUILD"] = "0"
+        versionProps.store(versionPropsFile.writer(), null)
+    }
+}
+
+tasks.named("preBuild") {
+    dependsOn("incrementVersionCode")
 }
 
 dependencies {

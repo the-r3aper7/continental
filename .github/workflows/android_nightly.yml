@@ -1,7 +1,9 @@
-name: Release Continental App
+name: Release Nightly APK
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - "nightly"
 
 jobs:
   build-nightly:
@@ -18,6 +20,15 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
+      - name: Get Version Name
+        id: get_version
+        run: |
+          VERSION_MAJOR=$(grep VERSION_MAJOR version.properties | cut -d'=' -f2)
+          VERSION_MINOR=$(grep VERSION_MINOR version.properties | cut -d'=' -f2)
+          VERSION_PATCH=$(grep VERSION_PATCH version.properties | cut -d'=' -f2)
+          VERSION_NAME="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}@nightly"
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Build Nightly APK
         uses: gradle/actions/setup-gradle@v3
@@ -47,10 +58,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
+          tag_name: v${{ steps.get_version.outputs.version_name }}
+          release_name: Release ${{ steps.get_version.outputs.version_name }}
           body: |
-            Hello There
+            Nightly build version ${{ steps.get_version.outputs.version_name }}
 
       - name: Upload Release Asset
         id: upload_release_asset
@@ -62,40 +73,3 @@ jobs:
           asset_path: ${{ steps.sign_app.outputs.signedFile }}
           asset_name: continental@nightly.apk
           asset_content_type: application/vnd.android.package-archive
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Build Release APK
-        uses: gradle/actions/setup-gradle@v3
-        run: gradle assembleRelease
-
-      - name: Sign app APK
-        id: sign_app
-        uses: ilharp/sign-android-release@nightly
-        with:
-          releaseDir: app/release
-          signingKey: ${{ secrets.SIGNING_KEY }}
-          keyAlias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: signed-apks
-          path: ${{ steps.sign_app.outputs.signedFile }}
-          if-no-files-found: error
-          retention-days: 20
