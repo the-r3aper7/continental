@@ -30,8 +30,8 @@ jobs:
           VERSION_NAME="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}@nightly"
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
+      - uses: gradle/actions/setup-gradle@v3
       - name: Build Nightly APK
-        uses: gradle/actions/setup-gradle@v3
         run: gradle assembleNightly
 
       - name: Sign Nightly APK
