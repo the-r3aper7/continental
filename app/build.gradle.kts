@@ -77,22 +77,21 @@ android {
     }
 }
 
-tasks.register("incrementVersionCode") {
+tasks.register("incrementVersionCodeForRelease") {
     doLast {
         versionProps.load(FileInputStream(versionPropsFile))
         versionProps["VERSION_BUILD"] =
             (versionProps["VERSION_BUILD"].toString().toInt() + 1).toString()
         versionProps.store(versionPropsFile.writer(), null)
-//        val propertiesFile = file("../version.properties")
-//        if (propertiesFile.canRead()) {
-//            val properties = Properties()
-//            properties.load(FileInputStream(propertiesFile))
-//            val versionBuild = properties["VERSION_BUILD"].toString().toInt() + 1
-//            properties["VERSION_BUILD"] = versionBuild.toString()
-//            properties.store(propertiesFile.writer(), null)
-//        } else {
-//            throw GradleException("Could not read version.properties!")
-//        }
+    }
+}
+
+tasks.register("incrementVersionCodeForNightly") {
+    doLast {
+        versionProps.load(FileInputStream(versionPropsFile))
+        versionProps["VERSION_BUILD_NIGHTLY"] =
+            (versionProps["VERSION_BUILD_NIGHTLY"].toString().toInt() + 1).toString()
+        versionProps.store(versionPropsFile.writer(), null)
     }
 }
 
@@ -129,8 +128,12 @@ tasks.register("incrementPatch") {
     }
 }
 
-tasks.named("preBuild") {
-    dependsOn("incrementVersionCode")
+tasks.whenTaskAdded {
+    if (name.contains("assembleRelease")) {
+        dependsOn("incrementVersionCodeForRelease")
+    } else if (name.contains("assembleNightly")) {
+        dependsOn("incrementVersionCodeForNightly")
+    }
 }
 
 dependencies {
