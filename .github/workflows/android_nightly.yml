@@ -21,15 +21,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Get Version Name
-        id: get_version
-        run: |
-          VERSION_MAJOR=$(grep VERSION_MAJOR version.properties | cut -d'=' -f2)
-          VERSION_MINOR=$(grep VERSION_MINOR version.properties | cut -d'=' -f2)
-          VERSION_PATCH=$(grep VERSION_PATCH version.properties | cut -d'=' -f2)
-          VERSION_NAME="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}@nightly"
-          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
-
       - uses: gradle/actions/setup-gradle@v3
 
       - name: Build Nightly APK
@@ -44,6 +35,17 @@ jobs:
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Get Version Name
+        id: get_version
+        run: |
+          VERSION_MAJOR=$(grep VERSION_MAJOR version.properties | cut -d'=' -f2)
+          VERSION_MINOR=$(grep VERSION_MINOR version.properties | cut -d'=' -f2)
+          VERSION_PATCH=$(grep VERSION_PATCH version.properties | cut -d'=' -f2)
+          VERSION_BUILD_NIGHTLY=$(grep VERSION_BUILD_NIGHTLY version.properties | cut -d'=' -f2)
+          VERSION_NAME="${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.${VERSION_BUILD_NIGHTLY}@nightly"
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
