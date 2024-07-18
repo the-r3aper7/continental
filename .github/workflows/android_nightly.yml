@@ -39,7 +39,7 @@ jobs:
         id: sign_nightly_app
         uses: ilharp/sign-android-release@nightly
         with:
-          releaseDir: app/build/outputs/apk/release
+          releaseDir: app/build/outputs/apk/nightly
           signingKey: ${{ secrets.SIGNING_KEY }}
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
