@@ -4,66 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-nightly:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'gradle'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Build Nightly APK
-        uses: gradle/actions/setup-gradle@v3
-        run: gradle assembleNightly
-
-      - name: Sign Nightly APK
-        id: sign_app
-        uses: ilharp/sign-android-release@nightly
-        with:
-          releaseDir: app/release
-          signingKey: ${{ secrets.SIGNING_KEY }}
-          keyAlias: ${{ secrets.ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: signed-apks
-          path: ${{ steps.sign_app.outputs.signedFile }}
-          if-no-files-found: error
-          retention-days: 20
-
-      - name: Create Nightly Release
-        id: create_nightly_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          body: |
-            Hello There
-
-      - name: Upload Release Asset
-        id: upload_release_asset
-        uses: actions/upload-release-asset@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_nightly_release.outputs.upload_url }}
-          asset_path: ${{ steps.sign_app.outputs.signedFile }}
-          asset_name: continental@nightly.apk
-          asset_content_type: application/vnd.android.package-archive
-
-  build:
+  build-release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -82,20 +23,51 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         run: gradle assembleRelease
 
-      - name: Sign app APK
+      - name: Sign Release APK
         id: sign_app
         uses: ilharp/sign-android-release@nightly
         with:
-          releaseDir: app/release
+          releaseDir: app/build/outputs/apk/release
           signingKey: ${{ secrets.SIGNING_KEY }}
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Get Version Name
+        id: get_version
+        run: |
+          VERSION_MAJOR=$(grep VERSION_MAJOR version.properties | cut -d'=' -f2)
+          VERSION_MINOR=$(grep VERSION_MINOR version.properties | cut -d'=' -f2)
+          VERSION_PATCH=$(grep VERSION_PATCH version.properties | cut -d'=' -f2)
+          VERSION_NAME="v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: signed-apks
+          name: Signed app bundle
           path: ${{ steps.sign_app.outputs.signedFile }}
           if-no-files-found: error
           retention-days: 20
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: |
+            Release build version ${{ steps.get_version.outputs.version_name }}
+
+      - name: Upload Release Asset
+        id: upload_release_asset
+        uses: actions/upload-release-asset@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.sign_app.outputs.signedFile }}
+          asset_name: continental@release.apk
+          asset_content_type: application/vnd.android.package-archive

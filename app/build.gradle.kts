@@ -128,16 +128,6 @@ tasks.register("incrementPatch") {
     }
 }
 
-tasks.whenTaskAdded {
-    if (name.contains("assembleRelease")) {
-        dependsOn("incrementVersionCodeForRelease")
-        dependsOn("incrementMinor")
-    } else if (name.contains("assembleNightly")) {
-        dependsOn("incrementVersionCodeForNightly")
-        dependsOn("incrementPatch")
-    }
-}
-
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
