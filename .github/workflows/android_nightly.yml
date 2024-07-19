@@ -1,10 +1,12 @@
-name: Release Continental App
+name: Release Nightly APK
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - "nightly"
 
 jobs:
-  build-release:
+  build-nightly:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,15 +21,16 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Build Release APK
-        uses: gradle/actions/setup-gradle@v3
-        run: gradle assembleRelease
+      - uses: gradle/actions/setup-gradle@v3
 
-      - name: Sign Release APK
-        id: sign_app
+      - name: Build Nightly APK
+        run: gradle assembleNightly
+
+      - name: Sign Nightly APK
+        id: sign_nightly_app
         uses: ilharp/sign-android-release@nightly
         with:
-          releaseDir: app/build/outputs/apk/release
+          releaseDir: app/build/outputs/apk/nightly
           signingKey: ${{ secrets.SIGNING_KEY }}
           keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -39,27 +42,28 @@ jobs:
           VERSION_MAJOR=$(grep VERSION_MAJOR version.properties | cut -d'=' -f2)
           VERSION_MINOR=$(grep VERSION_MINOR version.properties | cut -d'=' -f2)
           VERSION_PATCH=$(grep VERSION_PATCH version.properties | cut -d'=' -f2)
-          VERSION_NAME="v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+          VERSION_BUILD_NIGHTLY=$(grep VERSION_BUILD_NIGHTLY version.properties | cut -d'=' -f2)
+          VERSION_NAME="v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}-build-${VERSION_BUILD_NIGHTLY}@nightly"
           echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Signed app bundle
-          path: ${{ steps.sign_app.outputs.signedFile }}
+          path: ${{ steps.sign_nightly_app.outputs.signedFile }}
           if-no-files-found: error
           retention-days: 20
 
-      - name: Create Release
-        id: create_release
+      - name: Create Nightly Release
+        id: create_nightly_release
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
+          tag_name: v${{ steps.get_version.outputs.version_name }}
+          release_name: Release ${{ steps.get_version.outputs.version_name }}
           body: |
-            Release build version ${{ steps.get_version.outputs.version_name }}
+            Nightly build version ${{ steps.get_version.outputs.version_name }}
 
       - name: Upload Release Asset
         id: upload_release_asset
@@ -67,7 +71,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.sign_app.outputs.signedFile }}
-          asset_name: continental@release.apk
+          upload_url: ${{ steps.create_nightly_release.outputs.upload_url }}
+          asset_path: ${{ steps.sign_nightly_app.outputs.signedFile }}
+          asset_name: continental@nightly.apk
           asset_content_type: application/vnd.android.package-archive
