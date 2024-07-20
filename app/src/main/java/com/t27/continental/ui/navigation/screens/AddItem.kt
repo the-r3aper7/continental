@@ -46,6 +46,7 @@ import com.t27.continental.ui.components.SearchField
 import com.t27.continental.ui.components.SearchProductCard
 import com.t27.continental.ui.components.StateInitial
 import com.t27.continental.ui.components.StateLoading
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun AddItem(
@@ -67,16 +68,14 @@ fun AddItem(
     ) {
         SearchField(
             leadingIcon = {
-                location?.let {
-                    ProductSourceIcon(
-                        source = source,
-                        value = searchQuery,
-                        searchProductsViewModel = viewModel,
-                        expanded = expanded,
-                        location = it,
-                        onExpandedChange = { expanded = it }
-                    )
-                }
+                ProductSourceIcon(
+                    source = source,
+                    getLocation = { locationModel.getLocation(it) },
+                    value = searchQuery,
+                    searchProductsViewModel = viewModel,
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                )
             },
             value = searchQuery,
             onValueChange = {
@@ -228,7 +227,7 @@ fun ProductSuggestions(
 
 @Composable
 fun ProductSourceIcon(
-    location: Location,
+    getLocation: (SearchSource) -> StateFlow<Location?>,
     source: SearchSource,
     value: String,
     searchProductsViewModel: SearchProductsViewModel,
@@ -268,20 +267,23 @@ fun ProductSourceIcon(
         expanded = expanded,
         onDismissRequest = { onExpandedChange(false) }
     ) {
-        SearchSource.entries.toTypedArray().forEach {
+        SearchSource.entries.toTypedArray().forEach { itSource ->
+            val location by getLocation(itSource).collectAsState()
             DropdownMenuItem(
                 leadingIcon = {
                     Image(
-                        painter = painterResource(it.icon),
-                        contentDescription = "${it.name.lowercase()} icon",
+                        painter = painterResource(itSource.icon),
+                        contentDescription = "${itSource.name.lowercase()} icon",
                         modifier = Modifier
                             .width(32.dp)
                             .clip(MaterialTheme.shapes.medium)
                     )
                 },
-                text = { Text(it.title) },
+                text = { Text(itSource.title) },
                 onClick = {
-                    searchProductsViewModel.updateSearchQuery(value, it, location)
+                    location?.let {
+                        searchProductsViewModel.updateSearchQuery(value, itSource, it)
+                    }
                     onExpandedChange(false)
                 }
             )

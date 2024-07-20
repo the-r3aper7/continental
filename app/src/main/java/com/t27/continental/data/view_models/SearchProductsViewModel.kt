@@ -85,7 +85,7 @@ class SearchProductsViewModel(
             }
             SearchProductsState.Success(products)
         } catch (e: Exception) {
-            Log.e("TAG", "searchProducts: $e")
+            Log.e("TAG", "searchProducts: $location $query $source $e")
             SearchProductsState.Error
         }
     }
