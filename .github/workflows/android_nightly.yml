@@ -2,8 +2,7 @@ name: Release Nightly APK
 
 on:
   push:
-    branches:
-      - "nightly"
+    branches: [ "nightly" ]
 
 jobs:
   build-nightly:
@@ -60,7 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.get_version.outputs.version_name }}
+          tag_name: ${{ steps.get_version.outputs.version_name }}
           release_name: Release ${{ steps.get_version.outputs.version_name }}
           body: |
             Nightly build version ${{ steps.get_version.outputs.version_name }}
