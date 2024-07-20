@@ -121,7 +121,7 @@ fun HomeProductCard(
             ) {
                 items(similarItem) {
                     Row(
-                        horizontalArrangement = Arrangement.Center,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.medium)
